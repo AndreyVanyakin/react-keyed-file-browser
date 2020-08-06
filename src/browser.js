@@ -383,7 +383,7 @@ class RawFileBrowser extends React.Component {
         activeAction: shouldClearState ? null : prevState.activeAction,
       }),
       () => {
-        this.props.onSelect(selected);
+        this.props.onSelect(newSelection);
 
         if (selectedType === "file") this.props.onSelectFile(selected);
         if (selectedType === "folder") this.props.onSelectFolder(selected);
