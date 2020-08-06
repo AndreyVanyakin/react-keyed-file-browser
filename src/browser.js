@@ -1,48 +1,58 @@
-import PropTypes from 'prop-types'
-import React from 'react'
+import PropTypes from "prop-types";
+import React from "react";
 // drag and drop
-import HTML5Backend from 'react-dnd-html5-backend'
-import { DragDropContext } from 'react-dnd'
+import HTML5Backend from "react-dnd-html5-backend";
+import { DragDropContext } from "react-dnd";
 
 // default components (most overridable)
-import { DefaultDetail } from './details'
-import { DefaultFilter } from './filters'
+import { DefaultDetail } from "./details";
+import { DefaultFilter } from "./filters";
 
 // default renderers
-import { TableHeader } from './headers'
-import { TableFile } from './files'
-import { TableFolder } from './folders'
-import { DefaultConfirmDeletion, MultipleConfirmDeletion } from './confirmations'
+import { TableHeader } from "./headers";
+import { TableFile } from "./files";
+import { TableFolder } from "./folders";
+import {
+  DefaultConfirmDeletion,
+  MultipleConfirmDeletion,
+} from "./confirmations";
 
 // default processors
-import { GroupByFolder } from './groupers'
-import { SortByName } from './sorters'
+import { GroupByFolder } from "./groupers";
+import { SortByName } from "./sorters";
 
-import { isFolder } from './utils'
-import { DefaultAction } from './actions'
+import { isFolder } from "./utils";
+import { DefaultAction } from "./actions";
 
-const SEARCH_RESULTS_PER_PAGE = 20
-const regexForNewFolderOrFileSelection = /.*\/__new__[/]?$/gm
+const SEARCH_RESULTS_PER_PAGE = 20;
+const regexForNewFolderOrFileSelection = /.*\/__new__[/]?$/gm;
 
 function getItemProps(file, browserProps) {
   return {
     key: `file-${file.key}`,
     fileKey: file.key,
-    isSelected: (browserProps.selection.includes(file.key)),
+    isSelected: browserProps.selection.includes(file.key),
     isOpen: file.key in browserProps.openFolders || browserProps.nameFilter,
-    isRenaming: browserProps.activeAction === 'rename' && browserProps.actionTargets.includes(file.key),
-    isDeleting: browserProps.activeAction === 'delete' && browserProps.actionTargets.includes(file.key),
+    isRenaming:
+      browserProps.activeAction === "rename" &&
+      browserProps.actionTargets.includes(file.key),
+    isDeleting:
+      browserProps.activeAction === "delete" &&
+      browserProps.actionTargets.includes(file.key),
     isDraft: !!file.draft,
-  }
+  };
 }
 
 class RawFileBrowser extends React.Component {
   static propTypes = {
-    files: PropTypes.arrayOf(PropTypes.shape({
-      key: PropTypes.string.isRequired,
-      modified: PropTypes.number,
-      size: PropTypes.number,
-    })).isRequired,
+    files: PropTypes.arrayOf(
+      PropTypes.shape({
+        key: PropTypes.string.isRequired,
+        status: PropTypes.string.isRequired,
+        modified: PropTypes.number,
+        size: PropTypes.number,
+      })
+    ).isRequired,
     actions: PropTypes.node,
     showActionBar: PropTypes.bool.isRequired,
     canFilter: PropTypes.bool.isRequired,
@@ -65,10 +75,7 @@ class RawFileBrowser extends React.Component {
     }),
 
     nestChildren: PropTypes.bool.isRequired,
-    renderStyle: PropTypes.oneOf([
-      'list',
-      'table',
-    ]).isRequired,
+    renderStyle: PropTypes.oneOf(["list", "table"]).isRequired,
 
     startOpen: PropTypes.bool.isRequired, // TODO: remove?
 
@@ -105,19 +112,19 @@ class RawFileBrowser extends React.Component {
 
     onFolderOpen: PropTypes.func,
     onFolderClose: PropTypes.func,
-  }
+  };
 
   static defaultProps = {
     showActionBar: true,
     canFilter: true,
     showFoldersOnFilter: false,
-    noFilesMessage: 'No files.',
+    noFilesMessage: "No files.",
 
     group: GroupByFolder,
     sort: SortByName,
 
     nestChildren: false,
-    renderStyle: 'table',
+    renderStyle: "table",
 
     startOpen: false,
 
@@ -137,16 +144,16 @@ class RawFileBrowser extends React.Component {
 
     icons: {},
 
-    onSelect: (fileOrFolder) => { }, // Always called when a file or folder is selected
-    onSelectFile: (file) => { }, //    Called after onSelect, only on file selection
-    onSelectFolder: (folder) => { }, //    Called after onSelect, only on folder selection
+    onSelect: (fileOrFolder) => {}, // Always called when a file or folder is selected
+    onSelectFile: (file) => {}, //    Called after onSelect, only on file selection
+    onSelectFolder: (folder) => {}, //    Called after onSelect, only on folder selection
 
-    onPreviewOpen: (file) => { }, // File opened
-    onPreviewClose: (file) => { }, // File closed
+    onPreviewOpen: (file) => {}, // File opened
+    onPreviewClose: (file) => {}, // File closed
 
-    onFolderOpen: (folder) => { }, // Folder opened
-    onFolderClose: (folder) => { }, // Folder closed
-  }
+    onFolderOpen: (folder) => {}, // Folder opened
+    onFolderClose: (folder) => {}, // Folder closed
+  };
 
   state = {
     openFolders: {},
@@ -154,310 +161,371 @@ class RawFileBrowser extends React.Component {
     activeAction: null,
     actionTargets: [],
 
-    nameFilter: '',
+    nameFilter: "",
     searchResultsShown: SEARCH_RESULTS_PER_PAGE,
 
     previewFile: null,
 
     addFolder: null,
-  }
+  };
 
   componentDidMount() {
-    if (this.props.renderStyle === 'table' && this.props.nestChildren) {
-      console.warn('Invalid settings: Cannot nest table children in file browser')
+    if (this.props.renderStyle === "table" && this.props.nestChildren) {
+      console.warn(
+        "Invalid settings: Cannot nest table children in file browser"
+      );
     }
 
-    window.addEventListener('click', this.handleGlobalClick)
+    window.addEventListener("click", this.handleGlobalClick);
   }
 
   componentWillUnmount() {
-    window.removeEventListener('click', this.handleGlobalClick)
+    window.removeEventListener("click", this.handleGlobalClick);
   }
 
-  getFile = (key) => this.props.files.find(f => f.key === key)
+  getFile = (key) => this.props.files.find((f) => f.key === key);
 
   // item manipulation
   createFiles = (files, prefix) => {
-    this.setState(prevState => {
-      const stateChanges = { selection: [] }
-      if (prefix) {
-        stateChanges.openFolders = {
-          ...prevState.openFolders,
-          [prefix]: true,
+    this.setState(
+      (prevState) => {
+        const stateChanges = { selection: [] };
+        if (prefix) {
+          stateChanges.openFolders = {
+            ...prevState.openFolders,
+            [prefix]: true,
+          };
         }
+        return stateChanges;
+      },
+      () => {
+        this.props.onCreateFiles(files, prefix);
       }
-      return stateChanges
-    }, () => {
-      this.props.onCreateFiles(files, prefix)
-    })
-  }
+    );
+  };
 
   createFolder = (key) => {
-    this.setState({
-      activeAction: null,
-      actionTargets: [],
-      selection: [key],
-    }, () => {
-      this.props.onCreateFolder(key)
-    })
-  }
+    this.setState(
+      {
+        activeAction: null,
+        actionTargets: [],
+        selection: [key],
+      },
+      () => {
+        this.props.onCreateFolder(key);
+      }
+    );
+  };
 
   moveFile = (oldKey, newKey) => {
-    this.setState({
-      activeAction: null,
-      actionTargets: [],
-      selection: [newKey],
-    }, () => {
-      this.props.onMoveFile(oldKey, newKey)
-    })
-  }
-
-  moveFolder = (oldKey, newKey) => {
-    this.setState(prevState => {
-      const stateChanges = {
+    this.setState(
+      {
         activeAction: null,
         actionTargets: [],
         selection: [newKey],
+      },
+      () => {
+        this.props.onMoveFile(oldKey, newKey);
       }
-      if (oldKey in prevState.openFolders) {
-        stateChanges.openFolders = {
-          ...prevState.openFolders,
-          [newKey]: true,
+    );
+  };
+
+  moveFolder = (oldKey, newKey) => {
+    this.setState(
+      (prevState) => {
+        const stateChanges = {
+          activeAction: null,
+          actionTargets: [],
+          selection: [newKey],
+        };
+        if (oldKey in prevState.openFolders) {
+          stateChanges.openFolders = {
+            ...prevState.openFolders,
+            [newKey]: true,
+          };
         }
+        return stateChanges;
+      },
+      () => {
+        this.props.onMoveFolder(oldKey, newKey);
       }
-      return stateChanges
-    }, () => {
-      this.props.onMoveFolder(oldKey, newKey)
-    })
-  }
+    );
+  };
 
   renameFile = (oldKey, newKey) => {
-    this.setState({
-      activeAction: null,
-      actionTargets: [],
-      selection: [newKey],
-    }, () => {
-      this.props.onRenameFile(oldKey, newKey)
-    })
-  }
-
-  renameFolder = (oldKey, newKey) => {
-    this.setState(prevState => {
-      const stateChanges = {
+    this.setState(
+      {
         activeAction: null,
         actionTargets: [],
+        selection: [newKey],
+      },
+      () => {
+        this.props.onRenameFile(oldKey, newKey);
       }
-      if (prevState.selection[0].substr(0, oldKey.length) === oldKey) {
-        stateChanges.selection = [prevState.selection[0].replace(oldKey, newKey)]
-      }
-      if (oldKey in prevState.openFolders) {
-        stateChanges.openFolders = {
-          ...prevState.openFolders,
-          [newKey]: true,
+    );
+  };
+
+  renameFolder = (oldKey, newKey) => {
+    this.setState(
+      (prevState) => {
+        const stateChanges = {
+          activeAction: null,
+          actionTargets: [],
+        };
+        if (prevState.selection[0].substr(0, oldKey.length) === oldKey) {
+          stateChanges.selection = [
+            prevState.selection[0].replace(oldKey, newKey),
+          ];
         }
+        if (oldKey in prevState.openFolders) {
+          stateChanges.openFolders = {
+            ...prevState.openFolders,
+            [newKey]: true,
+          };
+        }
+        return stateChanges;
+      },
+      () => {
+        this.props.onRenameFolder(oldKey, newKey);
       }
-      return stateChanges
-    }, () => {
-      this.props.onRenameFolder(oldKey, newKey)
-    })
-  }
+    );
+  };
 
   deleteFile = (keys) => {
-    this.setState({
-      activeAction: null,
-      actionTargets: [],
-      selection: [],
-    }, () => {
-      this.props.onDeleteFile(keys)
-    })
-  }
-
-  deleteFolder = (key) => {
-    this.setState(prevState => {
-      const stateChanges = {
+    this.setState(
+      {
         activeAction: null,
         actionTargets: [],
         selection: [],
+      },
+      () => {
+        this.props.onDeleteFile(keys);
       }
-      if (key in prevState.openFolders) {
-        stateChanges.openFolders = { ...prevState.openFolders }
-        delete stateChanges.openFolders[key]
+    );
+  };
+
+  deleteFolder = (key) => {
+    this.setState(
+      (prevState) => {
+        const stateChanges = {
+          activeAction: null,
+          actionTargets: [],
+          selection: [],
+        };
+        if (key in prevState.openFolders) {
+          stateChanges.openFolders = { ...prevState.openFolders };
+          delete stateChanges.openFolders[key];
+        }
+        return stateChanges;
+      },
+      () => {
+        this.props.onDeleteFolder(key);
       }
-      return stateChanges
-    }, () => {
-      this.props.onDeleteFolder(key)
-    })
-  }
+    );
+  };
 
   downloadFile = (keys) => {
-    this.setState({
-      activeAction: null,
-      actionTargets: [],
-    }, () => {
-      this.props.onDownloadFile(keys)
-    })
-  }
+    this.setState(
+      {
+        activeAction: null,
+        actionTargets: [],
+      },
+      () => {
+        this.props.onDownloadFile(keys);
+      }
+    );
+  };
 
   // browser manipulation
   beginAction = (action, keys) => {
     this.setState({
       activeAction: action,
       actionTargets: keys || [],
-    })
-  }
+    });
+  };
 
   endAction = () => {
-    if (this.state.selection && this.state.selection.length > 0 && (
-      this.state.selection.filter((selection) => selection.match(regexForNewFolderOrFileSelection)).length > 0
-    )) {
-      this.setState({ selection: [] })
+    if (
+      this.state.selection &&
+      this.state.selection.length > 0 &&
+      this.state.selection.filter((selection) =>
+        selection.match(regexForNewFolderOrFileSelection)
+      ).length > 0
+    ) {
+      this.setState({ selection: [] });
     }
-    this.beginAction(null, null)
-  }
+    this.beginAction(null, null);
+  };
 
   select = (key, selectedType, ctrlKey, shiftKey) => {
-    const { actionTargets } = this.state
-    const shouldClearState = actionTargets.length && !actionTargets.includes(key)
-    const selected = this.getFile(key)
+    const { actionTargets } = this.state;
+    const shouldClearState =
+      actionTargets.length && !actionTargets.includes(key);
+    const selected = this.getFile(key);
 
-    let newSelection = [key]
+    let newSelection = [key];
     if (ctrlKey || shiftKey) {
-      const indexOfKey = this.state.selection.indexOf(key)
+      const indexOfKey = this.state.selection.indexOf(key);
       if (indexOfKey !== -1) {
-        newSelection = [...this.state.selection.slice(0, indexOfKey), ...this.state.selection.slice(indexOfKey + 1)]
+        newSelection = [
+          ...this.state.selection.slice(0, indexOfKey),
+          ...this.state.selection.slice(indexOfKey + 1),
+        ];
       } else {
-        newSelection = [...this.state.selection, key]
+        newSelection = [...this.state.selection, key];
       }
     }
 
-    this.setState(prevState => ({
-      selection: newSelection,
-      actionTargets: shouldClearState ? [] : actionTargets,
-      activeAction: shouldClearState ? null : prevState.activeAction,
-    }), () => {
-      this.props.onSelect(selected)
+    this.setState(
+      (prevState) => ({
+        selection: newSelection,
+        actionTargets: shouldClearState ? [] : actionTargets,
+        activeAction: shouldClearState ? null : prevState.activeAction,
+      }),
+      () => {
+        this.props.onSelect(selected);
 
-      if (selectedType === 'file') this.props.onSelectFile(selected)
-      if (selectedType === 'folder') this.props.onSelectFolder(selected)
-    })
-  }
+        if (selectedType === "file") this.props.onSelectFile(selected);
+        if (selectedType === "folder") this.props.onSelectFolder(selected);
+      }
+    );
+  };
 
   preview = (file) => {
-    if (this.state.previewFile && this.state.previewFile.key !== file.key) this.closeDetail()
+    if (this.state.previewFile && this.state.previewFile.key !== file.key)
+      this.closeDetail();
 
-    this.setState({
-      previewFile: file,
-    }, () => {
-      this.props.onPreviewOpen(file)
-    })
-  }
+    this.setState(
+      {
+        previewFile: file,
+      },
+      () => {
+        this.props.onPreviewOpen(file);
+      }
+    );
+  };
 
   closeDetail = () => {
-    this.setState({
-      previewFile: null,
-    }, () => {
-      this.props.onPreviewClose(this.state.previewFile)
-    })
-  }
+    this.setState(
+      {
+        previewFile: null,
+      },
+      () => {
+        this.props.onPreviewClose(this.state.previewFile);
+      }
+    );
+  };
 
   handleShowMoreClick = (event) => {
-    event.preventDefault()
-    this.setState(prevState => ({
-      searchResultsShown: prevState.searchResultsShown + SEARCH_RESULTS_PER_PAGE,
-    }))
-  }
+    event.preventDefault();
+    this.setState((prevState) => ({
+      searchResultsShown:
+        prevState.searchResultsShown + SEARCH_RESULTS_PER_PAGE,
+    }));
+  };
 
   toggleFolder = (folderKey) => {
-    const isOpen = folderKey in this.state.openFolders
-    this.setState(prevState => {
-      const stateChanges = {
-        openFolders: { ...prevState.openFolders },
+    const isOpen = folderKey in this.state.openFolders;
+    this.setState(
+      (prevState) => {
+        const stateChanges = {
+          openFolders: { ...prevState.openFolders },
+        };
+        if (isOpen) {
+          delete stateChanges.openFolders[folderKey];
+        } else {
+          stateChanges.openFolders[folderKey] = true;
+        }
+        return stateChanges;
+      },
+      () => {
+        const callback = isOpen ? "onFolderClose" : "onFolderOpen";
+        this.props[callback](this.getFile(folderKey));
       }
-      if (isOpen) {
-        delete stateChanges.openFolders[folderKey]
-      } else {
-        stateChanges.openFolders[folderKey] = true
-      }
-      return stateChanges
-    }, () => {
-      const callback = isOpen ? 'onFolderClose' : 'onFolderOpen'
-      this.props[callback](this.getFile(folderKey))
-    })
-  }
+    );
+  };
 
   openFolder = (folderKey) => {
-    this.setState(prevState => ({
-      openFolders: {
-        ...prevState.openFolders,
-        [folderKey]: true,
-      },
-    }), () => {
-      this.props.onFolderOpen(this.getFile(folderKey))
-    })
-  }
+    this.setState(
+      (prevState) => ({
+        openFolders: {
+          ...prevState.openFolders,
+          [folderKey]: true,
+        },
+      }),
+      () => {
+        this.props.onFolderOpen(this.getFile(folderKey));
+      }
+    );
+  };
 
   // event handlers
   handleGlobalClick = (event) => {
-    const inBrowser = !!(this.browserRef && this.browserRef.contains(event.target))
+    const inBrowser = !!(
+      this.browserRef && this.browserRef.contains(event.target)
+    );
 
     // TODO: updated old-to-new ref styles, but this ref was never set
-    const inPreview = !!(this.previewRef && this.previewRef.contains(event.target))
+    const inPreview = !!(
+      this.previewRef && this.previewRef.contains(event.target)
+    );
 
     if (!inBrowser && !inPreview) {
       this.setState({
         selection: [],
         actionTargets: [],
         activeAction: null,
-      })
+      });
     }
-  }
+  };
   handleActionBarRenameClick = (event) => {
-    event.preventDefault()
-    this.beginAction('rename', this.state.selection)
-  }
+    event.preventDefault();
+    this.beginAction("rename", this.state.selection);
+  };
   handleActionBarDeleteClick = (event) => {
-    event.preventDefault()
-    this.beginAction('delete', this.state.selection)
-  }
+    event.preventDefault();
+    this.beginAction("delete", this.state.selection);
+  };
   handleActionBarAddFolderClick = (event) => {
-    event.preventDefault()
-    if (this.state.activeAction === 'createFolder') {
-      return
+    event.preventDefault();
+    if (this.state.activeAction === "createFolder") {
+      return;
     }
-    this.setState(prevState => {
-      let addKey = ''
+    this.setState((prevState) => {
+      let addKey = "";
       if (prevState.selection && prevState.selection.length > 0) {
-        addKey += prevState.selection
-        if (addKey.substr(addKey.length - 1, addKey.length) !== '/') {
-          addKey += '/'
+        addKey += prevState.selection;
+        if (addKey.substr(addKey.length - 1, addKey.length) !== "/") {
+          addKey += "/";
         }
       }
 
-      if (addKey !== '__new__/' && !addKey.endsWith('/__new__/')) addKey += '__new__/'
+      if (addKey !== "__new__/" && !addKey.endsWith("/__new__/"))
+        addKey += "__new__/";
       const stateChanges = {
         actionTargets: [addKey],
-        activeAction: 'createFolder',
+        activeAction: "createFolder",
         selection: [addKey],
-      }
+      };
       if (prevState.selection && prevState.selection.length > 0) {
         stateChanges.openFolders = {
           ...prevState.openFolders,
           [this.state.selection]: true,
-        }
+        };
       }
-      return stateChanges
-    })
-  }
+      return stateChanges;
+    });
+  };
   handleActionBarDownloadClick = (event) => {
-    event.preventDefault()
-    this.downloadFile(this.state.selection)
-  }
+    event.preventDefault();
+    this.downloadFile(this.state.selection);
+  };
   updateFilter = (newValue) => {
     this.setState({
       nameFilter: newValue,
       searchResultsShown: SEARCH_RESULTS_PER_PAGE,
-    })
-  }
+    });
+  };
 
   getBrowserProps() {
     return {
@@ -468,7 +536,8 @@ class RawFileBrowser extends React.Component {
       folderRenderer: this.props.folderRenderer,
       folderRendererProps: this.props.folderRendererProps,
       confirmDeletionRenderer: this.props.confirmDeletionRenderer,
-      confirmMultipleDeletionRenderer: this.props.confirmMultipleDeletionRenderer,
+      confirmMultipleDeletionRenderer: this.props
+        .confirmMultipleDeletionRenderer,
       icons: this.props.icons,
 
       // browser state
@@ -497,20 +566,27 @@ class RawFileBrowser extends React.Component {
       deleteFolder: this.props.onDeleteFolder ? this.deleteFolder : undefined,
 
       getItemProps: getItemProps,
-    }
+    };
   }
 
   renderActionBar(selectedItems) {
     const {
-      icons, canFilter,
-      filterRendererProps, filterRenderer: FilterRenderer,
+      icons,
+      canFilter,
+      filterRendererProps,
+      filterRenderer: FilterRenderer,
       actionRenderer: ActionRenderer,
-      onCreateFolder, onRenameFile, onRenameFolder,
-      onDeleteFile, onDeleteFolder, onDownloadFile,
-    } = this.props
-    const browserProps = this.getBrowserProps()
-    const selectionIsFolder = (selectedItems.length === 1 && !selectedItems[0].size)
-    let filter
+      onCreateFolder,
+      onRenameFile,
+      onRenameFolder,
+      onDeleteFile,
+      onDeleteFolder,
+      onDownloadFile,
+    } = this.props;
+    const browserProps = this.getBrowserProps();
+    const selectionIsFolder =
+      selectedItems.length === 1 && !selectedItems[0].size;
+    let filter;
     if (canFilter) {
       filter = (
         <FilterRenderer
@@ -518,60 +594,54 @@ class RawFileBrowser extends React.Component {
           updateFilter={this.updateFilter}
           {...filterRendererProps}
         />
-      )
+      );
     }
 
     const actions = (
       <ActionRenderer
         browserProps={browserProps}
-
         selectedItems={selectedItems}
         isFolder={selectionIsFolder}
-
         icons={icons}
         nameFilter={this.state.nameFilter}
-
-        canCreateFolder={typeof onCreateFolder === 'function'}
+        canCreateFolder={typeof onCreateFolder === "function"}
         onCreateFolder={this.handleActionBarAddFolderClick}
-
-        canRenameFile={typeof onRenameFile === 'function'}
+        canRenameFile={typeof onRenameFile === "function"}
         onRenameFile={this.handleActionBarRenameClick}
-
-        canRenameFolder={typeof onRenameFolder === 'function'}
+        canRenameFolder={typeof onRenameFolder === "function"}
         onRenameFolder={this.handleActionBarRenameClick}
-
-        canDeleteFile={typeof onDeleteFile === 'function'}
+        canDeleteFile={typeof onDeleteFile === "function"}
         onDeleteFile={this.handleActionBarDeleteClick}
-
-        canDeleteFolder={typeof onDeleteFolder === 'function'}
+        canDeleteFolder={typeof onDeleteFolder === "function"}
         onDeleteFolder={this.handleActionBarDeleteClick}
-
-        canDownloadFile={typeof onDownloadFile === 'function'}
+        canDownloadFile={typeof onDownloadFile === "function"}
         onDownloadFile={this.handleActionBarDownloadClick}
       />
-    )
+    );
 
     return (
       <div className="action-bar">
         {filter}
         {actions}
       </div>
-    )
+    );
   }
 
   renderFiles(files, depth) {
     const {
-      fileRenderer: FileRenderer, fileRendererProps,
-      folderRenderer: FolderRenderer, folderRendererProps,
-    } = this.props
-    const browserProps = this.getBrowserProps()
-    let renderedFiles = []
+      fileRenderer: FileRenderer,
+      fileRendererProps,
+      folderRenderer: FolderRenderer,
+      folderRendererProps,
+    } = this.props;
+    const browserProps = this.getBrowserProps();
+    let renderedFiles = [];
 
     files.map((file) => {
       const thisItemProps = {
         ...browserProps.getItemProps(file, browserProps),
         depth: this.state.nameFilter ? 0 : depth,
-      }
+      };
 
       if (!isFolder(file)) {
         renderedFiles.push(
@@ -581,7 +651,7 @@ class RawFileBrowser extends React.Component {
             browserProps={browserProps}
             {...fileRendererProps}
           />
-        )
+        );
       } else {
         if (this.props.showFoldersOnFilter || !this.state.nameFilter) {
           renderedFiles.push(
@@ -591,87 +661,100 @@ class RawFileBrowser extends React.Component {
               browserProps={browserProps}
               {...folderRendererProps}
             />
-          )
+          );
         }
-        if (this.state.nameFilter || (thisItemProps.isOpen && !browserProps.nestChildren)) {
-          renderedFiles = renderedFiles.concat(this.renderFiles(file.children, depth + 1))
+        if (
+          this.state.nameFilter ||
+          (thisItemProps.isOpen && !browserProps.nestChildren)
+        ) {
+          renderedFiles = renderedFiles.concat(
+            this.renderFiles(file.children, depth + 1)
+          );
         }
       }
-    })
-    return renderedFiles
+    });
+    return renderedFiles;
   }
 
   handleMultipleDeleteSubmit = () => {
-    console.log(this)
-    this.deleteFolder(this.state.selection.filter(selection => selection[selection.length - 1] === '/'))
-    this.deleteFile(this.state.selection.filter(selection => selection[selection.length - 1] !== '/'))
-  }
+    console.log(this);
+    this.deleteFolder(
+      this.state.selection.filter(
+        (selection) => selection[selection.length - 1] === "/"
+      )
+    );
+    this.deleteFile(
+      this.state.selection.filter(
+        (selection) => selection[selection.length - 1] !== "/"
+      )
+    );
+  };
 
   render() {
-    const { selection } = this.state
-    const browserProps = this.getBrowserProps()
+    const { selection } = this.state;
+    const browserProps = this.getBrowserProps();
     const headerProps = {
       browserProps,
-      fileKey: '',
+      fileKey: "",
       fileCount: this.props.files.length,
-    }
-    let renderedFiles
+    };
+    let renderedFiles;
 
-    let files = this.props.files.concat([])
-    if (this.state.activeAction === 'createFolder') {
+    let files = this.props.files.concat([]);
+    if (this.state.activeAction === "createFolder") {
       files.push({
         key: this.state.actionTargets[0],
         size: 0,
         draft: true,
-      })
+      });
     }
     if (this.state.nameFilter) {
-      const filteredFiles = []
-      const terms = this.state.nameFilter.toLowerCase().split(' ')
+      const filteredFiles = [];
+      const terms = this.state.nameFilter.toLowerCase().split(" ");
       files.map((file) => {
-        let skip = false
+        let skip = false;
         terms.map((term) => {
           if (file.key.toLowerCase().trim().indexOf(term) === -1) {
-            skip = true
+            skip = true;
           }
-        })
+        });
         if (skip) {
-          return
+          return;
         }
-        filteredFiles.push(file)
-      })
-      files = filteredFiles
+        filteredFiles.push(file);
+      });
+      files = filteredFiles;
     }
-    if (typeof this.props.group === 'function') {
-      files = this.props.group(files, '')
+    if (typeof this.props.group === "function") {
+      files = this.props.group(files, "");
     } else {
-      const newFiles = []
+      const newFiles = [];
       files.map((file) => {
         if (!isFolder(file)) {
-          newFiles.push(file)
+          newFiles.push(file);
         }
-      })
-      files = newFiles
+      });
+      files = newFiles;
     }
-    const selectedItems = []
+    const selectedItems = [];
     const findSelected = (item) => {
       if (selection.includes(item.key)) {
-        selectedItems.push(item)
+        selectedItems.push(item);
       }
       if (item.children) {
-        item.children.map(findSelected)
+        item.children.map(findSelected);
       }
-    }
-    files.map(findSelected)
-    if (typeof this.props.sort === 'function') {
-      files = this.props.sort(files)
+    };
+    files.map(findSelected);
+    if (typeof this.props.sort === "function") {
+      files = this.props.sort(files);
     }
 
-    let header
+    let header;
     /** @type any */
-    let contents = this.renderFiles(files, 0)
+    let contents = this.renderFiles(files, 0);
     switch (this.props.renderStyle) {
-      case 'table':
+      case "table":
         if (!contents.length) {
           if (this.state.nameFilter) {
             contents = (
@@ -680,33 +763,28 @@ class RawFileBrowser extends React.Component {
                   No files matching "{this.state.nameFilter}".
                 </td>
               </tr>
-            )
+            );
           } else {
             contents = (
               <tr>
-                <td colSpan={100}>
-                  {this.props.noFilesMessage}
-                </td>
+                <td colSpan={100}>{this.props.noFilesMessage}</td>
               </tr>
-            )
+            );
           }
         } else {
           if (this.state.nameFilter) {
-            const numFiles = contents.length
-            contents = contents.slice(0, this.state.searchResultsShown)
+            const numFiles = contents.length;
+            contents = contents.slice(0, this.state.searchResultsShown);
             if (numFiles > contents.length) {
               contents.push(
                 <tr key="show-more">
                   <td colSpan={100}>
-                    <a
-                      onClick={this.handleShowMoreClick}
-                      href="#"
-                    >
+                    <a onClick={this.handleShowMoreClick} href="#">
                       Show more results
                     </a>
                   </td>
                 </tr>
-              )
+              );
             }
           }
         }
@@ -719,40 +797,39 @@ class RawFileBrowser extends React.Component {
                 {...this.props.headerRendererProps}
               />
             </thead>
-          )
+          );
         }
 
         renderedFiles = (
           <table cellSpacing="0" cellPadding="0">
             {header}
-            <tbody>
-              {contents}
-            </tbody>
+            <tbody>{contents}</tbody>
           </table>
-        )
-        break
+        );
+        break;
 
-      case 'list':
+      case "list":
         if (!contents.length) {
           if (this.state.nameFilter) {
-            contents = (<p className="empty">No files matching "{this.state.nameFilter}"</p>)
+            contents = (
+              <p className="empty">
+                No files matching "{this.state.nameFilter}"
+              </p>
+            );
           } else {
-            contents = (<p className="empty">No files.</p>)
+            contents = <p className="empty">No files.</p>;
           }
         } else {
-          let more
+          let more;
           if (this.state.nameFilter) {
-            const numFiles = contents.length
-            contents = contents.slice(0, this.state.searchResultsShown)
+            const numFiles = contents.length;
+            contents = contents.slice(0, this.state.searchResultsShown);
             if (numFiles > contents.length) {
               more = (
-                <a
-                  onClick={this.handleShowMoreClick}
-                  href="#"
-                >
+                <a onClick={this.handleShowMoreClick} href="#">
                   Show more results
                 </a>
-              )
+              );
             }
           }
           contents = (
@@ -760,7 +837,7 @@ class RawFileBrowser extends React.Component {
               <ul>{contents}</ul>
               {more}
             </div>
-          )
+          );
         }
 
         if (this.props.headerRenderer) {
@@ -769,7 +846,7 @@ class RawFileBrowser extends React.Component {
               {...headerProps}
               {...this.props.headerRendererProps}
             />
-          )
+          );
         }
 
         renderedFiles = (
@@ -777,24 +854,30 @@ class RawFileBrowser extends React.Component {
             {header}
             {contents}
           </div>
-        )
-        break
+        );
+        break;
     }
 
-    const ConfirmMultipleDeletionRenderer = this.props.confirmMultipleDeletionRenderer
+    const ConfirmMultipleDeletionRenderer = this.props
+      .confirmMultipleDeletionRenderer;
 
     return (
       <div className="rendered-react-keyed-file-browser">
         {this.props.actions}
-        <div className="rendered-file-browser" ref={el => { this.browserRef = el }}>
+        <div
+          className="rendered-file-browser"
+          ref={(el) => {
+            this.browserRef = el;
+          }}
+        >
           {this.props.showActionBar && this.renderActionBar(selectedItems)}
-          {this.state.activeAction === 'delete' && this.state.selection.length > 1 &&
-            <ConfirmMultipleDeletionRenderer
-              handleDeleteSubmit={this.handleMultipleDeleteSubmit}
-            />}
-          <div className="files">
-            {renderedFiles}
-          </div>
+          {this.state.activeAction === "delete" &&
+            this.state.selection.length > 1 && (
+              <ConfirmMultipleDeletionRenderer
+                handleDeleteSubmit={this.handleMultipleDeleteSubmit}
+              />
+            )}
+          <div className="files">{renderedFiles}</div>
         </div>
         {this.state.previewFile !== null && (
           <this.props.detailRenderer
@@ -804,12 +887,12 @@ class RawFileBrowser extends React.Component {
           />
         )}
       </div>
-    )
+    );
   }
 }
 
 @DragDropContext(HTML5Backend)
-class FileBrowser extends RawFileBrowser { }
+class FileBrowser extends RawFileBrowser {}
 
-export default FileBrowser
-export { RawFileBrowser }
+export default FileBrowser;
+export { RawFileBrowser };

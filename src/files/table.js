@@ -21,6 +21,7 @@ class RawTableFile extends BaseFile {
       connectDragPreview,
       depth,
       size,
+      status,
       modified,
     } = this.props;
 
@@ -87,7 +88,7 @@ class RawTableFile extends BaseFile {
           <div style={{ paddingLeft: depth * 16 + "px" }}>{draggable}</div>
         </td>
         <td className="size">{fileSize(size)}</td>
-        <td className="">Status</td>
+        <td className="modified">{status}</td>
         <td className="modified">
           {typeof modified === "undefined"
             ? "-"
