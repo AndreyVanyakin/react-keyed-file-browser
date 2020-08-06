@@ -1,24 +1,34 @@
-import React from 'react'
-import ClassNames from 'classnames'
-import { DragSource, DropTarget } from 'react-dnd'
-import { NativeTypes } from 'react-dnd-html5-backend'
+import React from "react";
+import ClassNames from "classnames";
+import { DragSource, DropTarget } from "react-dnd";
+import { NativeTypes } from "react-dnd-html5-backend";
 
-import BaseFolder, { BaseFolderConnectors } from './../base-folder.js'
-import { BaseFileConnectors } from './../base-file.js'
+import BaseFolder, { BaseFolderConnectors } from "./../base-folder.js";
+import { BaseFileConnectors } from "./../base-file.js";
 
 class RawTableFolder extends BaseFolder {
   render() {
     const {
-      isOpen, isDragging, isDeleting, isRenaming, isDraft, isOver, isSelected,
-      action, url, browserProps, connectDragPreview, depth,
-    } = this.props
+      isOpen,
+      isDragging,
+      isDeleting,
+      isRenaming,
+      isDraft,
+      isOver,
+      isSelected,
+      action,
+      url,
+      browserProps,
+      connectDragPreview,
+      depth,
+    } = this.props;
 
-    const icon = browserProps.icons[isOpen ? 'FolderOpen' : 'Folder']
-    const inAction = (isDragging || action)
+    const icon = browserProps.icons[isOpen ? "FolderOpen" : "Folder"];
+    const inAction = isDragging || action;
 
-    const ConfirmDeletionRenderer = browserProps.confirmDeletionRenderer
+    const ConfirmDeletionRenderer = browserProps.confirmDeletionRenderer;
 
-    let name
+    let name;
     if (!inAction && isDeleting && browserProps.selection.length === 1) {
       name = (
         <ConfirmDeletionRenderer
@@ -29,7 +39,7 @@ class RawTableFolder extends BaseFolder {
           {icon}
           {this.getName()}
         </ConfirmDeletionRenderer>
-      )
+      );
     } else if ((!inAction && isRenaming) || isDraft) {
       name = (
         <div>
@@ -37,7 +47,9 @@ class RawTableFolder extends BaseFolder {
             {icon}
             <input
               type="text"
-              ref={el => { this.newNameRef = el }}
+              ref={(el) => {
+                this.newNameRef = el;
+              }}
               value={this.state.newName}
               onChange={this.handleNewNameChange}
               onBlur={this.handleCancelEdit}
@@ -45,7 +57,7 @@ class RawTableFolder extends BaseFolder {
             />
           </form>
         </div>
-      )
+      );
     } else {
       name = (
         <div>
@@ -54,21 +66,17 @@ class RawTableFolder extends BaseFolder {
             {this.getName()}
           </a>
         </div>
-      )
+      );
     }
 
-    let draggable = (
-      <div>
-        {name}
-      </div>
-    )
-    if (typeof browserProps.moveFile === 'function') {
-      draggable = connectDragPreview(draggable)
+    let draggable = <div>{name}</div>;
+    if (typeof browserProps.moveFile === "function") {
+      draggable = connectDragPreview(draggable);
     }
 
     const folder = (
       <tr
-        className={ClassNames('folder', {
+        className={ClassNames("folder", {
           pending: action,
           dragging: isDragging,
           dragover: isOver,
@@ -78,26 +86,29 @@ class RawTableFolder extends BaseFolder {
         onDoubleClick={this.handleFolderDoubleClick}
       >
         <td className="name">
-          <div style={{ paddingLeft: (depth * 16) + 'px' }}>
-            {draggable}
-          </div>
+          <div style={{ paddingLeft: depth * 16 + "px" }}>{draggable}</div>
         </td>
         <td />
         <td />
+        <td />
       </tr>
-    )
+    );
 
-    return this.connectDND(folder)
+    return this.connectDND(folder);
   }
 }
 
-@DragSource('folder', BaseFolderConnectors.dragSource, BaseFolderConnectors.dragCollect)
+@DragSource(
+  "folder",
+  BaseFolderConnectors.dragSource,
+  BaseFolderConnectors.dragCollect
+)
 @DropTarget(
-  ['file', 'folder', NativeTypes.FILE],
+  ["file", "folder", NativeTypes.FILE],
   BaseFileConnectors.targetSource,
   BaseFileConnectors.targetCollect
 )
 class TableFolder extends RawTableFolder {}
 
-export default TableFolder
-export { RawTableFolder }
+export default TableFolder;
+export { RawTableFolder };

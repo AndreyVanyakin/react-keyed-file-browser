@@ -1,26 +1,36 @@
-import React from 'react'
-import ClassNames from 'classnames'
-import { DragSource, DropTarget } from 'react-dnd'
-import { NativeTypes } from 'react-dnd-html5-backend'
-import { formatDistanceToNow } from 'date-fns'
+import React from "react";
+import ClassNames from "classnames";
+import { DragSource, DropTarget } from "react-dnd";
+import { NativeTypes } from "react-dnd-html5-backend";
+import { formatDistanceToNow } from "date-fns";
 
-import BaseFile, { BaseFileConnectors } from './../base-file.js'
-import { fileSize } from './utils.js'
+import BaseFile, { BaseFileConnectors } from "./../base-file.js";
+import { fileSize } from "./utils.js";
 
 class RawTableFile extends BaseFile {
   render() {
     const {
-      isDragging, isDeleting, isRenaming, isOver, isSelected,
-      action, url, browserProps, connectDragPreview,
-      depth, size, modified,
-    } = this.props
+      isDragging,
+      isDeleting,
+      isRenaming,
+      isOver,
+      isSelected,
+      action,
+      url,
+      browserProps,
+      connectDragPreview,
+      depth,
+      size,
+      modified,
+    } = this.props;
 
-    const icon = browserProps.icons[this.getFileType()] || browserProps.icons.File
-    const inAction = (isDragging || action)
+    const icon =
+      browserProps.icons[this.getFileType()] || browserProps.icons.File;
+    const inAction = isDragging || action;
 
-    const ConfirmDeletionRenderer = browserProps.confirmDeletionRenderer
+    const ConfirmDeletionRenderer = browserProps.confirmDeletionRenderer;
 
-    let name
+    let name;
     if (!inAction && isDeleting && browserProps.selection.length === 1) {
       name = (
         <ConfirmDeletionRenderer
@@ -31,13 +41,15 @@ class RawTableFile extends BaseFile {
           {icon}
           {this.getName()}
         </ConfirmDeletionRenderer>
-      )
+      );
     } else if (!inAction && isRenaming) {
       name = (
         <form className="renaming" onSubmit={this.handleRenameSubmit}>
           {icon}
           <input
-            ref={el => { this.newNameRef = el }}
+            ref={(el) => {
+              this.newNameRef = el;
+            }}
             type="text"
             value={this.state.newName}
             onChange={this.handleNewNameChange}
@@ -45,32 +57,24 @@ class RawTableFile extends BaseFile {
             autoFocus
           />
         </form>
-      )
+      );
     } else {
       name = (
-        <a
-          href={url || '#'}
-          download="download"
-          onClick={this.handleFileClick}
-        >
+        <a href={url || "#"} download="download" onClick={this.handleFileClick}>
           {icon}
           {this.getName()}
         </a>
-      )
+      );
     }
 
-    let draggable = (
-      <div>
-        {name}
-      </div>
-    )
-    if (typeof browserProps.moveFile === 'function') {
-      draggable = connectDragPreview(draggable)
+    let draggable = <div>{name}</div>;
+    if (typeof browserProps.moveFile === "function") {
+      draggable = connectDragPreview(draggable);
     }
 
     const row = (
       <tr
-        className={ClassNames('file', {
+        className={ClassNames("file", {
           pending: action,
           dragging: isDragging,
           dragover: isOver,
@@ -80,28 +84,33 @@ class RawTableFile extends BaseFile {
         onDoubleClick={this.handleItemDoubleClick}
       >
         <td className="name">
-          <div style={{ paddingLeft: (depth * 16) + 'px' }}>
-            {draggable}
-          </div>
+          <div style={{ paddingLeft: depth * 16 + "px" }}>{draggable}</div>
         </td>
         <td className="size">{fileSize(size)}</td>
+        <td className="">Status</td>
         <td className="modified">
-          {typeof modified === 'undefined' ? '-' : formatDistanceToNow(modified, { addSuffix: true })}
+          {typeof modified === "undefined"
+            ? "-"
+            : formatDistanceToNow(modified, { addSuffix: true })}
         </td>
       </tr>
-    )
+    );
 
-    return this.connectDND(row)
+    return this.connectDND(row);
   }
 }
 
-@DragSource('file', BaseFileConnectors.dragSource, BaseFileConnectors.dragCollect)
+@DragSource(
+  "file",
+  BaseFileConnectors.dragSource,
+  BaseFileConnectors.dragCollect
+)
 @DropTarget(
-  ['file', 'folder', NativeTypes.FILE],
+  ["file", "folder", NativeTypes.FILE],
   BaseFileConnectors.targetSource,
   BaseFileConnectors.targetCollect
 )
 class TableFile extends RawTableFile {}
 
-export default TableFile
-export { RawTableFile }
+export default TableFile;
+export { RawTableFile };
