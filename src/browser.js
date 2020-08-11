@@ -47,9 +47,11 @@ class RawFileBrowser extends React.Component {
   static propTypes = {
     files: PropTypes.arrayOf(
       PropTypes.shape({
+        file_id: PropTypes.number.isRequired,
         key: PropTypes.string.isRequired,
         status: PropTypes.string.isRequired,
         modified: PropTypes.number,
+        created: PropTypes.number,
         size: PropTypes.number,
       })
     ).isRequired,
@@ -385,7 +387,10 @@ class RawFileBrowser extends React.Component {
       () => {
         this.props.onSelect(newSelection);
 
-        if (selectedType === "file") this.props.onSelectFile(selected);
+        if (selectedType === "file")
+          this.props.onSelectFile(
+            this.state.selection.map((k) => this.getFile(k))
+          );
         if (selectedType === "folder") this.props.onSelectFolder(selected);
       }
     );
