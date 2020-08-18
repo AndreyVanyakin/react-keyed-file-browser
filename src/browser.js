@@ -469,7 +469,7 @@ class RawFileBrowser extends React.Component {
     const inBrowser = !!(
       this.browserRef && this.browserRef.contains(event.target)
     );
-
+    console.log("Global click");
     // TODO: updated old-to-new ref styles, but this ref was never set
     const inPreview = !!(
       this.previewRef && this.previewRef.contains(event.target)
