@@ -95,6 +95,7 @@ class RawFileBrowser extends React.Component {
     confirmDeletionRenderer: PropTypes.func,
     confirmMultipleDeletionRenderer: PropTypes.func,
 
+    onSelectionChange: PropTypes.oneOfType([PropTypes.func, PropTypes.bool]),
     onCreateFiles: PropTypes.oneOfType([PropTypes.func, PropTypes.bool]),
     onCreateFolder: PropTypes.oneOfType([PropTypes.func, PropTypes.bool]),
     onMoveFile: PropTypes.oneOfType([PropTypes.func, PropTypes.bool]),
@@ -149,7 +150,7 @@ class RawFileBrowser extends React.Component {
     onSelect: (fileOrFolder) => {}, // Always called when a file or folder is selected
     onSelectFile: (file) => {}, //    Called after onSelect, only on file selection
     onSelectFolder: (folder) => {}, //    Called after onSelect, only on folder selection
-
+    onSelectionChange: (selection) => {}, // Pass selection state up
     onPreviewOpen: (file) => {}, // File opened
     onPreviewClose: (file) => {}, // File closed
 
@@ -359,6 +360,10 @@ class RawFileBrowser extends React.Component {
     this.beginAction(null, null);
   };
 
+  onSelectionChange = () => {
+    this.props.onSelectionChange(this.state.selection);
+  };
+
   select = (key, selectedType, ctrlKey, shiftKey) => {
     const { actionTargets } = this.state;
     const shouldClearState =
@@ -469,7 +474,6 @@ class RawFileBrowser extends React.Component {
     const inBrowser = !!(
       this.browserRef && this.browserRef.contains(event.target)
     );
-    console.log("Global click");
     // TODO: updated old-to-new ref styles, but this ref was never set
     const inPreview = !!(
       this.previewRef && this.previewRef.contains(event.target)
@@ -697,6 +701,9 @@ class RawFileBrowser extends React.Component {
 
   render() {
     const { selection } = this.state;
+    this.onSelectionChange();
+    // Pass selection to this function
+
     const browserProps = this.getBrowserProps();
     const headerProps = {
       browserProps,
