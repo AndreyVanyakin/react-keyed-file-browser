@@ -15,6 +15,7 @@ const files = [
     key: "animals/",
     modified: addHours(new Date(), 1).getTime(),
     size: 0,
+    status: "some_status",
   },
   {
     key: "animals/dog.png",

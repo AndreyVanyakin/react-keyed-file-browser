@@ -18,6 +18,7 @@ class RawTableFolder extends BaseFolder {
       isSelected,
       action,
       url,
+      isShouldShowShared,
       browserProps,
       connectDragPreview,
       depth,
@@ -88,6 +89,7 @@ class RawTableFolder extends BaseFolder {
         <td className="name">
           <div style={{ paddingLeft: depth * 16 + "px" }}>{draggable}</div>
         </td>
+        {this.props.isShouldShowShared ? <td /> : null}
         <td />
         <td />
         <td />

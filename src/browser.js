@@ -23,6 +23,7 @@ import { SortByName } from "./sorters";
 
 import { isFolder } from "./utils";
 import { DefaultAction } from "./actions";
+import { includes } from "lodash";
 
 const SEARCH_RESULTS_PER_PAGE = 20;
 const regexForNewFolderOrFileSelection = /.*\/__new__[/]?$/gm;
@@ -50,6 +51,7 @@ class RawFileBrowser extends React.Component {
         file_id: PropTypes.number.isRequired,
         key: PropTypes.string.isRequired,
         status: PropTypes.string.isRequired,
+        sharer: PropTypes.string,
         modified: PropTypes.number,
         created: PropTypes.number,
         size: PropTypes.number,
@@ -187,6 +189,20 @@ class RawFileBrowser extends React.Component {
   }
 
   getFile = (key) => this.props.files.find((f) => f.key === key);
+
+  // Define if we should show shared column in Folder, File renderers
+  isShouldShowShared = () => {
+    // console.log("Input files", this.props.files);
+    const filesWithSharedPresent = this.props.files.filter((fileObj) =>
+      includes(Object.keys(fileObj), "sharer")
+    );
+    const isShould = filesWithSharedPresent.length > 0;
+    // console.log(
+    //   isShould ? "We should see shared" : "We should NOT see shared",
+    //   filesWithSharedPresent
+    // );
+    return isShould;
+  };
 
   // item manipulation
   createFiles = (files, prefix) => {
@@ -658,6 +674,7 @@ class RawFileBrowser extends React.Component {
             {...file}
             {...thisItemProps}
             browserProps={browserProps}
+            isShouldShowShared={this.isShouldShowShared()}
             {...fileRendererProps}
           />
         );
@@ -667,6 +684,7 @@ class RawFileBrowser extends React.Component {
             <FolderRenderer
               {...file}
               {...thisItemProps}
+              isShouldShowShared={this.isShouldShowShared()}
               browserProps={browserProps}
               {...folderRendererProps}
             />
@@ -709,6 +727,7 @@ class RawFileBrowser extends React.Component {
       browserProps,
       fileKey: "",
       fileCount: this.props.files.length,
+      isShouldShowShared: this.isShouldShowShared(),
     };
     let renderedFiles;
 

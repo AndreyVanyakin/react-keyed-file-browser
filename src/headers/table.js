@@ -15,6 +15,7 @@ class RawTableHeader extends React.Component {
     connectDropTarget: PropTypes.func,
     isOver: PropTypes.bool,
     isSelected: PropTypes.func,
+    isShouldShowShared: PropTypes.bool,
 
     browserProps: PropTypes.shape({
       createFiles: PropTypes.func,
@@ -36,6 +37,9 @@ class RawTableHeader extends React.Component {
         })}
       >
         <th>File</th>
+        {this.props.isShouldShowShared ? (
+          <th className="size">Sharer</th>
+        ) : null}
         <th className="size">Size</th>
         <th className="size">Status</th>
         <th className="modified">Last Modified</th>

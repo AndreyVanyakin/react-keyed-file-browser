@@ -20,6 +20,8 @@ class RawTableFile extends BaseFile {
       browserProps,
       connectDragPreview,
       depth,
+      isShouldShowShared,
+      sharer,
       size,
       status,
       modified,
@@ -87,6 +89,9 @@ class RawTableFile extends BaseFile {
         <td className="name">
           <div style={{ paddingLeft: depth * 16 + "px" }}>{draggable}</div>
         </td>
+        {this.props.isShouldShowShared ? (
+          <td className="size">{sharer}</td>
+        ) : null}
         <td className="size">{fileSize(size)}</td>
         <td className="modified">{status}</td>
         <td className="modified">
