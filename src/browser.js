@@ -48,7 +48,7 @@ class RawFileBrowser extends React.Component {
   static propTypes = {
     files: PropTypes.arrayOf(
       PropTypes.shape({
-        file_id: PropTypes.number.isRequired,
+        file_id: PropTypes.number,
         key: PropTypes.string.isRequired,
         status: PropTypes.string.isRequired,
         sharer: PropTypes.string,
