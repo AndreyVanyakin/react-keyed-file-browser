@@ -1,5 +1,5 @@
 import PropTypes from "prop-types";
-import React from "react";
+import React, { Component, PureComponent } from "react";
 // drag and drop
 import HTML5Backend from "react-dnd-html5-backend";
 import { DragDropContext } from "react-dnd";
@@ -44,7 +44,7 @@ function getItemProps(file, browserProps) {
   };
 }
 
-class RawFileBrowser extends React.Component {
+class RawFileBrowser extends PureComponent {
   static propTypes = {
     files: PropTypes.arrayOf(
       PropTypes.shape({
