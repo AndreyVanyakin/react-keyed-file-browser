@@ -12,27 +12,32 @@ import "./stories";
 
 const files = [
   {
+    id: 1,
     key: "animals/",
     modified: addHours(new Date(), 1).getTime(),
     size: 0,
     status: "some_status",
   },
   {
+    id: 2,
     key: "animals/dog.png",
     modified: subHours(new Date(), 1).getTime(),
     size: 0,
   },
   {
+    id: 3,
     key: "cat.png",
     modified: subHours(new Date(), 1).getTime(),
     size: 1.5 * 1024 * 1024,
   },
   {
+    id: 4,
     key: "kitten.png",
     modified: subDays(new Date(), 3).getTime(),
     size: 545 * 1024,
   },
   {
+    id: 5,
     key: "elephant.png",
     modified: subDays(new Date(), 3).getTime(),
     size: 52 * 1024,

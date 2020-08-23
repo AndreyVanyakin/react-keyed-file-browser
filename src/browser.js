@@ -48,7 +48,7 @@ class RawFileBrowser extends React.Component {
   static propTypes = {
     files: PropTypes.arrayOf(
       PropTypes.shape({
-        file_id: PropTypes.number,
+        id: PropTypes.number.isRequired,
         key: PropTypes.string.isRequired,
         status: PropTypes.string.isRequired,
         sharer: PropTypes.string,
@@ -107,6 +107,7 @@ class RawFileBrowser extends React.Component {
     onDeleteFile: PropTypes.oneOfType([PropTypes.func, PropTypes.bool]),
     onDeleteFolder: PropTypes.oneOfType([PropTypes.func, PropTypes.bool]),
     onDownloadFile: PropTypes.oneOfType([PropTypes.func, PropTypes.bool]),
+    isShouldInvokeCreateFolder: PropTypes.bool,
 
     onSelect: PropTypes.func,
     onSelectFile: PropTypes.func,
@@ -158,11 +159,13 @@ class RawFileBrowser extends React.Component {
 
     onFolderOpen: (folder) => {}, // Folder opened
     onFolderClose: (folder) => {}, // Folder closed
+
+    isShouldInvokeCreateFolder: false,
   };
 
   state = {
     openFolders: {},
-    selection: [],
+    selection: [], // should be the file ids, not keys. If folder => then all children files
     activeAction: null,
     actionTargets: [],
 
@@ -188,7 +191,8 @@ class RawFileBrowser extends React.Component {
     window.removeEventListener("click", this.handleGlobalClick);
   }
 
-  getFile = (key) => this.props.files.find((f) => f.key === key);
+  getFile = (id) => this.props.files.find((f) => f.id === id);
+  getFolder = (key) => this.props.files.find((k) => f.key === key);
 
   // Define if we should show shared column in Folder, File renderers
   isShouldShowShared = () => {
@@ -223,6 +227,7 @@ class RawFileBrowser extends React.Component {
     );
   };
 
+  // Disabled for Amera at the moment
   createFolder = (key) => {
     this.setState(
       {
@@ -236,6 +241,7 @@ class RawFileBrowser extends React.Component {
     );
   };
 
+  // Should work
   moveFile = (oldKey, newKey) => {
     this.setState(
       {
@@ -249,6 +255,7 @@ class RawFileBrowser extends React.Component {
     );
   };
 
+  // Should work
   moveFolder = (oldKey, newKey) => {
     this.setState(
       (prevState) => {
@@ -271,6 +278,7 @@ class RawFileBrowser extends React.Component {
     );
   };
 
+  // Should work
   renameFile = (oldKey, newKey) => {
     this.setState(
       {
@@ -284,6 +292,7 @@ class RawFileBrowser extends React.Component {
     );
   };
 
+  // Should work
   renameFolder = (oldKey, newKey) => {
     this.setState(
       (prevState) => {
@@ -310,6 +319,7 @@ class RawFileBrowser extends React.Component {
     );
   };
 
+  // Should work
   deleteFile = (keys) => {
     this.setState(
       {
@@ -323,6 +333,7 @@ class RawFileBrowser extends React.Component {
     );
   };
 
+  // Not using now
   deleteFolder = (key) => {
     this.setState(
       (prevState) => {
@@ -343,6 +354,7 @@ class RawFileBrowser extends React.Component {
     );
   };
 
+  // Not using now
   downloadFile = (keys) => {
     this.setState(
       {
@@ -356,10 +368,10 @@ class RawFileBrowser extends React.Component {
   };
 
   // browser manipulation
-  beginAction = (action, keys) => {
+  beginAction = (action, ids) => {
     this.setState({
       activeAction: action,
-      actionTargets: keys || [],
+      actionTargets: ids || [],
     });
   };
 
@@ -380,22 +392,22 @@ class RawFileBrowser extends React.Component {
     this.props.onSelectionChange(this.state.selection);
   };
 
-  select = (key, selectedType, ctrlKey, shiftKey) => {
+  select = (id, selectedType, ctrlKey, shiftKey) => {
     const { actionTargets } = this.state;
     const shouldClearState =
-      actionTargets.length && !actionTargets.includes(key);
-    const selected = this.getFile(key);
+      actionTargets.length && !actionTargets.includes(id);
+    const selected = this.getFile(id);
 
-    let newSelection = [key];
+    let newSelection = [id];
     if (ctrlKey || shiftKey) {
-      const indexOfKey = this.state.selection.indexOf(key);
+      const indexOfKey = this.state.selection.indexOf(id);
       if (indexOfKey !== -1) {
         newSelection = [
           ...this.state.selection.slice(0, indexOfKey),
           ...this.state.selection.slice(indexOfKey + 1),
         ];
       } else {
-        newSelection = [...this.state.selection, key];
+        newSelection = [...this.state.selection, id];
       }
     }
 
@@ -410,7 +422,7 @@ class RawFileBrowser extends React.Component {
 
         if (selectedType === "file")
           this.props.onSelectFile(
-            this.state.selection.map((k) => this.getFile(k))
+            this.state.selection.map((id) => this.getFile(id))
           );
         if (selectedType === "folder") this.props.onSelectFolder(selected);
       }
@@ -418,7 +430,7 @@ class RawFileBrowser extends React.Component {
   };
 
   preview = (file) => {
-    if (this.state.previewFile && this.state.previewFile.key !== file.key)
+    if (this.state.previewFile && this.state.previewFile.id !== file.id)
       this.closeDetail();
 
     this.setState(
@@ -431,6 +443,7 @@ class RawFileBrowser extends React.Component {
     );
   };
 
+  // Should be ok
   closeDetail = () => {
     this.setState(
       {
@@ -442,6 +455,7 @@ class RawFileBrowser extends React.Component {
     );
   };
 
+  // Not used
   handleShowMoreClick = (event) => {
     event.preventDefault();
     this.setState((prevState) => ({
@@ -450,6 +464,7 @@ class RawFileBrowser extends React.Component {
     }));
   };
 
+  // Changes here
   toggleFolder = (folderKey) => {
     const isOpen = folderKey in this.state.openFolders;
     this.setState(
@@ -466,7 +481,7 @@ class RawFileBrowser extends React.Component {
       },
       () => {
         const callback = isOpen ? "onFolderClose" : "onFolderOpen";
-        this.props[callback](this.getFile(folderKey));
+        this.props[callback](this.getFolder(folderKey));
       }
     );
   };
@@ -480,7 +495,7 @@ class RawFileBrowser extends React.Component {
         },
       }),
       () => {
-        this.props.onFolderOpen(this.getFile(folderKey));
+        this.props.onFolderOpen(this.getFolder(folderKey));
       }
     );
   };
@@ -505,14 +520,17 @@ class RawFileBrowser extends React.Component {
   };
   handleActionBarRenameClick = (event) => {
     event.preventDefault();
+    // Should check this
     this.beginAction("rename", this.state.selection);
   };
+  // Not using this
   handleActionBarDeleteClick = (event) => {
     event.preventDefault();
     this.beginAction("delete", this.state.selection);
   };
-  handleActionBarAddFolderClick = (event) => {
-    event.preventDefault();
+  // Not using this
+  handleActionBarAddFolderClick = () => {
+    // event.preventDefault();
     if (this.state.activeAction === "createFolder") {
       return;
     }
@@ -541,10 +559,12 @@ class RawFileBrowser extends React.Component {
       return stateChanges;
     });
   };
+  // Not using this
   handleActionBarDownloadClick = (event) => {
     event.preventDefault();
     this.downloadFile(this.state.selection);
   };
+  // ok
   updateFilter = (newValue) => {
     this.setState({
       nameFilter: newValue,
@@ -702,7 +722,7 @@ class RawFileBrowser extends React.Component {
     });
     return renderedFiles;
   }
-
+  // Not using this
   handleMultipleDeleteSubmit = () => {
     console.log(this);
     this.deleteFolder(
@@ -720,6 +740,10 @@ class RawFileBrowser extends React.Component {
   render() {
     const { selection } = this.state;
     this.onSelectionChange();
+    // Simulate create folder click
+    this.props.isShouldInvokeCreateFolder
+      ? this.handleActionBarAddFolderClick()
+      : null;
     // Pass selection to this function
 
     const browserProps = this.getBrowserProps();
