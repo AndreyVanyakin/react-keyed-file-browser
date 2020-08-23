@@ -521,6 +521,7 @@ class RawFileBrowser extends React.Component {
     }
   };
   handleActionBarRenameClick = () => {
+    console.log("Action bar rename triggered");
     // event.preventDefault();
     // Should check this
     this.beginAction("rename", this.state.selection);
