@@ -108,6 +108,7 @@ class RawFileBrowser extends React.Component {
     onDeleteFolder: PropTypes.oneOfType([PropTypes.func, PropTypes.bool]),
     onDownloadFile: PropTypes.oneOfType([PropTypes.func, PropTypes.bool]),
     isShouldInvokeCreateFolder: PropTypes.bool,
+    isShouldFireRename: PropTypes.bool,
 
     onSelect: PropTypes.func,
     onSelectFile: PropTypes.func,
@@ -161,6 +162,7 @@ class RawFileBrowser extends React.Component {
     onFolderClose: (folder) => {}, // Folder closed
 
     isShouldInvokeCreateFolder: false,
+    isShouldFireRename: false,
   };
 
   state = {
@@ -518,8 +520,8 @@ class RawFileBrowser extends React.Component {
       });
     }
   };
-  handleActionBarRenameClick = (event) => {
-    event.preventDefault();
+  handleActionBarRenameClick = () => {
+    // event.preventDefault();
     // Should check this
     this.beginAction("rename", this.state.selection);
   };
@@ -744,7 +746,7 @@ class RawFileBrowser extends React.Component {
     this.props.isShouldInvokeCreateFolder
       ? this.handleActionBarAddFolderClick()
       : null;
-    // Pass selection to this function
+    this.props.isShouldFireRename ? this.handleActionBarRenameClick() : null;
 
     const browserProps = this.getBrowserProps();
     const headerProps = {
