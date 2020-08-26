@@ -70,7 +70,14 @@ class RawTableFile extends BaseFile {
       );
     }
 
-    let draggable = <div>{name}</div>;
+    let draggable = (
+      <div>
+        <span className="encrypted-icon">
+          {this.props.status === "encrypted" ? browserProps.icons.Lock : null}
+        </span>
+        {name}
+      </div>
+    );
     if (typeof browserProps.moveFile === "function") {
       draggable = connectDragPreview(draggable);
     }
@@ -93,7 +100,7 @@ class RawTableFile extends BaseFile {
           <td className="size">{sharer}</td>
         ) : null}
         <td className="size">{fileSize(size)}</td>
-        <td className="modified">{status}</td>
+        {/* <td className="modified">{status}</td> */}
         <td className="modified">
           {typeof modified === "undefined"
             ? "-"

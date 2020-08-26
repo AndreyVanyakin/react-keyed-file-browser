@@ -1,27 +1,38 @@
-import React from 'react'
-import ClassNames from 'classnames'
-import { DragSource, DropTarget } from 'react-dnd'
-import { NativeTypes } from 'react-dnd-html5-backend'
+import React from "react";
+import ClassNames from "classnames";
+import { DragSource, DropTarget } from "react-dnd";
+import { NativeTypes } from "react-dnd-html5-backend";
 
-import BaseFolder, { BaseFolderConnectors } from './../base-folder.js'
-import { BaseFileConnectors } from './../base-file.js'
+import BaseFolder, { BaseFolderConnectors } from "./../base-folder.js";
+import { BaseFileConnectors } from "./../base-file.js";
 
-import { isFolder } from '../utils'
+import { isFolder } from "../utils";
 
 class RawListThumbnailFolder extends BaseFolder {
   render() {
     const {
-      isOpen, isDragging, isDeleting, isRenaming, isDraft, isOver, isSelected,
-      url, action, browserProps, depth, keyDerived, connectDragPreview,
-    } = this.props
+      isOpen,
+      isDragging,
+      isDeleting,
+      isRenaming,
+      isDraft,
+      isOver,
+      isSelected,
+      url,
+      action,
+      browserProps,
+      depth,
+      keyDerived,
+      connectDragPreview,
+    } = this.props;
 
-    const icon = browserProps.icons[isOpen ? 'FolderOpen' : 'Folder']
+    const icon = browserProps.icons[isOpen ? "FolderOpen" : "Folder"];
 
-    const inAction = (isDragging || action)
+    const inAction = isDragging || action;
 
-    const ConfirmDeletionRenderer = browserProps.confirmDeletionRenderer
+    const ConfirmDeletionRenderer = browserProps.confirmDeletionRenderer;
 
-    let name
+    let name;
     if (!inAction && isDeleting && browserProps.selection.length === 1) {
       name = (
         <ConfirmDeletionRenderer
@@ -31,14 +42,16 @@ class RawListThumbnailFolder extends BaseFolder {
         >
           {this.getName()}
         </ConfirmDeletionRenderer>
-      )
+      );
     } else if ((!inAction && isRenaming) || isDraft) {
       name = (
         <div>
           <form className="renaming" onSubmit={this.handleRenameSubmit}>
             <input
               type="text"
-              ref={el => { this.newNameRef = el }}
+              ref={(el) => {
+                this.newNameRef = el;
+              }}
               value={this.state.newName}
               onChange={this.handleNewNameChange}
               onBlur={this.handleCancelEdit}
@@ -46,27 +59,25 @@ class RawListThumbnailFolder extends BaseFolder {
             />
           </form>
         </div>
-      )
+      );
     } else {
       name = (
         <div>
-          <a onClick={this.toggleFolder}>
-            {this.getName()}
-          </a>
+          <a onClick={this.toggleFolder}>{this.getName()}</a>
         </div>
-      )
+      );
     }
 
-    let children
+    let children;
     if (isOpen && browserProps.nestChildren) {
-      children = []
+      children = [];
       for (let childIndex = 0; childIndex < children.length; childIndex++) {
-        const file = children[childIndex]
+        const file = children[childIndex];
 
         const thisItemProps = {
           ...browserProps.getItemProps(file, browserProps),
           depth: depth + 1,
-        }
+        };
 
         if (!isFolder(file)) {
           children.push(
@@ -76,7 +87,7 @@ class RawListThumbnailFolder extends BaseFolder {
               browserProps={browserProps}
               {...browserProps.fileRendererProps}
             />
-          )
+          );
         } else {
           children.push(
             <browserProps.folderRenderer
@@ -85,19 +96,21 @@ class RawListThumbnailFolder extends BaseFolder {
               browserProps={browserProps}
               {...browserProps.folderRendererProps}
             />
-          )
+          );
         }
       }
       if (children.length) {
-        children = (<ul style={{ padding: '0 8px', paddingLeft: '16px' }}>{children}</ul>)
+        children = (
+          <ul style={{ padding: "0 8px", paddingLeft: "16px" }}>{children}</ul>
+        );
       } else {
-        children = (<p>No items in this folder</p>)
+        children = <p>No items in this folder</p>;
       }
     }
 
     let folder = (
       <li
-        className={ClassNames('folder', {
+        className={ClassNames("folder", {
           expanded: isOpen && browserProps.nestChildren,
           pending: action,
           dragging: isDragging,
@@ -113,22 +126,26 @@ class RawListThumbnailFolder extends BaseFolder {
         </div>
         {children}
       </li>
-    )
-    if (typeof browserProps.moveFolder === 'function' && keyDerived) {
-      folder = connectDragPreview(folder)
+    );
+    if (typeof browserProps.moveFolder === "function" && keyDerived) {
+      folder = connectDragPreview(folder);
     }
 
-    return this.connectDND(folder)
+    return this.connectDND(folder);
   }
 }
 
-@DragSource('folder', BaseFolderConnectors.dragSource, BaseFolderConnectors.dragCollect)
+@DragSource(
+  "folder",
+  BaseFolderConnectors.dragSource,
+  BaseFolderConnectors.dragCollect
+)
 @DropTarget(
-  ['file', 'folder', NativeTypes.FILE],
+  ["file", "folder", NativeTypes.FILE],
   BaseFileConnectors.targetSource,
   BaseFileConnectors.targetCollect
 )
 class ListThumbnailFolder extends RawListThumbnailFolder {}
 
-export default ListThumbnailFolder
-export { RawListThumbnailFolder }
+export default ListThumbnailFolder;
+export { RawListThumbnailFolder };

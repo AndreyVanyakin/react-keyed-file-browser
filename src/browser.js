@@ -44,13 +44,14 @@ function getItemProps(file, browserProps) {
   };
 }
 
-class RawFileBrowser extends PureComponent {
+class RawFileBrowser extends Component {
   static propTypes = {
     files: PropTypes.arrayOf(
       PropTypes.shape({
-        id: PropTypes.number.isRequired,
+        file_id: PropTypes.oneOfType([PropTypes.string, PropTypes.number])
+          .isRequired,
         key: PropTypes.string.isRequired,
-        status: PropTypes.string.isRequired,
+        status: PropTypes.oneOf(["encrypted", "unencrypted"]),
         sharer: PropTypes.string,
         modified: PropTypes.number,
         created: PropTypes.number,
@@ -70,12 +71,21 @@ class RawFileBrowser extends PureComponent {
       Folder: PropTypes.element,
       FolderOpen: PropTypes.element,
       File: PropTypes.element,
-      PDF: PropTypes.element,
+      FolderPlus: PropTypes.element,
       Image: PropTypes.element,
+      Video: PropTypes.element,
+      Audio: PropTypes.element,
+      Word: PropTypes.element,
+      Excel: PropTypes.element,
+      Archive: PropTypes.element,
+      Text: PropTypes.element,
+      PDF: PropTypes.element,
       Delete: PropTypes.element,
       Rename: PropTypes.element,
       Loading: PropTypes.element,
       Download: PropTypes.element,
+      Search: PropTypes.element,
+      Lock: PropTypes.element,
     }),
 
     nestChildren: PropTypes.bool.isRequired,
@@ -107,8 +117,6 @@ class RawFileBrowser extends PureComponent {
     onDeleteFile: PropTypes.oneOfType([PropTypes.func, PropTypes.bool]),
     onDeleteFolder: PropTypes.oneOfType([PropTypes.func, PropTypes.bool]),
     onDownloadFile: PropTypes.oneOfType([PropTypes.func, PropTypes.bool]),
-    isShouldInvokeCreateFolder: PropTypes.bool,
-    isShouldFireRename: PropTypes.bool,
 
     onSelect: PropTypes.func,
     onSelectFile: PropTypes.func,
@@ -146,8 +154,6 @@ class RawFileBrowser extends PureComponent {
     detailRenderer: DefaultDetail,
     detailRendererProps: {},
     actionRenderer: DefaultAction,
-    confirmDeletionRenderer: DefaultConfirmDeletion,
-    confirmMultipleDeletionRenderer: MultipleConfirmDeletion,
 
     icons: {},
 
@@ -189,12 +195,17 @@ class RawFileBrowser extends PureComponent {
     window.addEventListener("click", this.handleGlobalClick);
   }
 
+  componentDidUpdate() {
+    // console.log("RKFB CDU");
+    this.onSelectionChange();
+  }
+
   componentWillUnmount() {
+    // console.log("RKFB CWU");
     window.removeEventListener("click", this.handleGlobalClick);
   }
 
-  getFile = (id) => this.props.files.find((f) => f.id === id);
-  getFolder = (key) => this.props.files.find((k) => f.key === key);
+  getFile = (key) => this.props.files.find((f) => f.key === key);
 
   // Define if we should show shared column in Folder, File renderers
   isShouldShowShared = () => {
@@ -394,22 +405,22 @@ class RawFileBrowser extends PureComponent {
     this.props.onSelectionChange(this.state.selection);
   };
 
-  select = (id, selectedType, ctrlKey, shiftKey) => {
+  select = (key, selectedType, ctrlKey, shiftKey) => {
     const { actionTargets } = this.state;
     const shouldClearState =
-      actionTargets.length && !actionTargets.includes(id);
-    const selected = this.getFile(id);
+      actionTargets.length && !actionTargets.includes(key);
+    const selected = this.getFile(key);
 
-    let newSelection = [id];
+    let newSelection = [key];
     if (ctrlKey || shiftKey) {
-      const indexOfKey = this.state.selection.indexOf(id);
+      const indexOfKey = this.state.selection.indexOf(key);
       if (indexOfKey !== -1) {
         newSelection = [
           ...this.state.selection.slice(0, indexOfKey),
           ...this.state.selection.slice(indexOfKey + 1),
         ];
       } else {
-        newSelection = [...this.state.selection, id];
+        newSelection = [...this.state.selection, key];
       }
     }
 
@@ -424,7 +435,7 @@ class RawFileBrowser extends PureComponent {
 
         if (selectedType === "file")
           this.props.onSelectFile(
-            this.state.selection.map((id) => this.getFile(id))
+            this.state.selection.map((key) => this.getFile(key))
           );
         if (selectedType === "folder") this.props.onSelectFolder(selected);
       }
@@ -432,7 +443,7 @@ class RawFileBrowser extends PureComponent {
   };
 
   preview = (file) => {
-    if (this.state.previewFile && this.state.previewFile.id !== file.id)
+    if (this.state.previewFile && this.state.previewFile.key !== file.key)
       this.closeDetail();
 
     this.setState(
@@ -483,7 +494,7 @@ class RawFileBrowser extends PureComponent {
       },
       () => {
         const callback = isOpen ? "onFolderClose" : "onFolderOpen";
-        this.props[callback](this.getFolder(folderKey));
+        this.props[callback](this.getFile(folderKey));
       }
     );
   };
@@ -497,7 +508,7 @@ class RawFileBrowser extends PureComponent {
         },
       }),
       () => {
-        this.props.onFolderOpen(this.getFolder(folderKey));
+        this.props.onFolderOpen(this.getFile(folderKey));
       }
     );
   };
@@ -520,8 +531,14 @@ class RawFileBrowser extends PureComponent {
       });
     }
   };
-  handleActionBarRenameClick = () => {
-    console.log("Action bar rename triggered");
+  handleActionBarRenameClick = (event) => {
+    if (event) {
+      event.preventDefault();
+    }
+    console.log(
+      "Action bar rename triggered, the selection is",
+      this.state.selection
+    );
     // event.preventDefault();
     // Should check this
     this.beginAction("rename", this.state.selection);
@@ -639,6 +656,7 @@ class RawFileBrowser extends PureComponent {
       filter = (
         <FilterRenderer
           value={this.state.nameFilter}
+          icons={this.props.icons}
           updateFilter={this.updateFilter}
           {...filterRendererProps}
         />
@@ -668,7 +686,7 @@ class RawFileBrowser extends PureComponent {
     );
 
     return (
-      <div className="action-bar">
+      <div className="action-bar" ref={this.actionBarRef}>
         {filter}
         {actions}
       </div>
@@ -742,12 +760,6 @@ class RawFileBrowser extends PureComponent {
 
   render() {
     const { selection } = this.state;
-    this.onSelectionChange();
-    // Simulate create folder click
-    this.props.isShouldInvokeCreateFolder
-      ? this.handleActionBarAddFolderClick()
-      : null;
-    this.props.isShouldFireRename ? this.handleActionBarRenameClick() : null;
 
     const browserProps = this.getBrowserProps();
     const headerProps = {

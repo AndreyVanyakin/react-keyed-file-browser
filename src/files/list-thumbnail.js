@@ -1,11 +1,11 @@
-import React from 'react'
-import ClassNames from 'classnames'
-import { DragSource, DropTarget } from 'react-dnd'
-import { NativeTypes } from 'react-dnd-html5-backend'
-import { formatDistanceToNow } from 'date-fns'
+import React from "react";
+import ClassNames from "classnames";
+import { DragSource, DropTarget } from "react-dnd";
+import { NativeTypes } from "react-dnd-html5-backend";
+import { formatDistanceToNow } from "date-fns";
 
-import BaseFile, { BaseFileConnectors } from './../base-file.js'
-import { fileSize } from './utils.js'
+import BaseFile, { BaseFileConnectors } from "./../base-file.js";
+import { fileSize } from "./utils.js";
 
 class RawListThumbnailFile extends BaseFile {
   static defaultProps = {
@@ -13,34 +13,45 @@ class RawListThumbnailFile extends BaseFile {
     showSize: true,
     showModified: true,
     isSelectable: true,
-  }
+  };
 
   render() {
     const {
-      thumbnail_url: thumbnailUrl, action, url,
-      isDragging, isRenaming, isSelected, isSelectable, isOver, isDeleting,
-      showName, showSize, showModified, browserProps, connectDragPreview,
-    } = this.props
+      thumbnail_url: thumbnailUrl,
+      action,
+      url,
+      isDragging,
+      isRenaming,
+      isSelected,
+      isSelectable,
+      isOver,
+      isDeleting,
+      showName,
+      showSize,
+      showModified,
+      browserProps,
+      connectDragPreview,
+    } = this.props;
 
-    let icon
+    let icon;
     if (thumbnailUrl) {
       icon = (
         <div
           className="image"
           style={{
-            backgroundImage: 'url(' + thumbnailUrl + ')',
+            backgroundImage: "url(" + thumbnailUrl + ")",
           }}
         />
-      )
+      );
     } else {
-      icon = browserProps.icons[this.getFileType()] || browserProps.icons.File
+      icon = browserProps.icons[this.getFileType()] || browserProps.icons.File;
     }
 
-    const inAction = (isDragging || action)
+    const inAction = isDragging || action;
 
-    const ConfirmDeletionRenderer = browserProps.confirmDeletionRenderer
+    const ConfirmDeletionRenderer = browserProps.confirmDeletionRenderer;
 
-    let name
+    let name;
     if (showName) {
       if (!inAction && isDeleting && browserProps.selection.length === 1) {
         name = (
@@ -51,12 +62,14 @@ class RawListThumbnailFile extends BaseFile {
           >
             {this.getName()}
           </ConfirmDeletionRenderer>
-        )
+        );
       } else if (!inAction && isRenaming) {
         name = (
           <form className="renaming" onSubmit={this.handleRenameSubmit}>
             <input
-              ref={el => { this.newNameRef = el }}
+              ref={(el) => {
+                this.newNameRef = el;
+              }}
               type="text"
               value={this.state.newName}
               onChange={this.handleNewNameChange}
@@ -64,45 +77,48 @@ class RawListThumbnailFile extends BaseFile {
               autoFocus
             />
           </form>
-        )
+        );
       } else {
         name = (
           <a href={url} download="download" onClick={this.handleFileClick}>
             {this.getName()}
           </a>
-        )
+        );
       }
     }
 
-    let size
+    let size;
     if (showSize) {
       if (!isRenaming && !isDeleting) {
         size = (
-          <span className="size"><small>{fileSize(this.props.size)}</small></span>
-        )
+          <span className="size">
+            <small>{fileSize(this.props.size)}</small>
+          </span>
+        );
       }
     }
-    let modified
+    let modified;
     if (showModified) {
       if (!isRenaming && !isDeleting) {
         modified = (
           <span className="modified">
-            Last modified: {formatDistanceToNow(this.props.modified, { addSuffix: true })}
+            Last modified:{" "}
+            {formatDistanceToNow(this.props.modified, { addSuffix: true })}
           </span>
-        )
+        );
       }
     }
 
-    let rowProps = {}
+    let rowProps = {};
     if (isSelectable) {
       rowProps = {
         onClick: this.handleItemClick,
-      }
+      };
     }
 
     let row = (
       <li
-        className={ClassNames('file', {
+        className={ClassNames("file", {
           pending: action,
           dragging: isDragging,
           dragover: isOver,
@@ -113,27 +129,38 @@ class RawListThumbnailFile extends BaseFile {
       >
         <div className="item">
           <span className="thumb">{icon}</span>
-          <span className="name">{name}</span>
+          <span className="name">
+            <span className="encrypted-icon">
+              {this.props.status === "encrypted"
+                ? browserProps.icons.Lock
+                : null}
+            </span>
+            {name}
+          </span>
           {size}
           {modified}
         </div>
       </li>
-    )
-    if (typeof browserProps.moveFile === 'function') {
-      row = connectDragPreview(row)
+    );
+    if (typeof browserProps.moveFile === "function") {
+      row = connectDragPreview(row);
     }
 
-    return this.connectDND(row)
+    return this.connectDND(row);
   }
 }
 
-@DragSource('file', BaseFileConnectors.dragSource, BaseFileConnectors.dragCollect)
+@DragSource(
+  "file",
+  BaseFileConnectors.dragSource,
+  BaseFileConnectors.dragCollect
+)
 @DropTarget(
-  ['file', 'folder', NativeTypes.FILE],
+  ["file", "folder", NativeTypes.FILE],
   BaseFileConnectors.targetSource,
   BaseFileConnectors.targetCollect
 )
 class ListThumbnailFile extends RawListThumbnailFile {}
 
-export default ListThumbnailFile
-export { RawListThumbnailFile }
+export default ListThumbnailFile;
+export { RawListThumbnailFile };
