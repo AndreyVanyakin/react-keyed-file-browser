@@ -91,7 +91,7 @@ class RawTableFolder extends BaseFolder {
         </td>
         {this.props.isShouldShowShared ? <td /> : null}
         <td />
-        <td />
+        {/* <td /> */}
         <td />
       </tr>
     );
@@ -110,7 +110,7 @@ class RawTableFolder extends BaseFolder {
   BaseFileConnectors.targetSource,
   BaseFileConnectors.targetCollect
 )
-class TableFolder extends RawTableFolder {}
+class TableFolder extends RawTableFolder { }
 
 export default TableFolder;
 export { RawTableFolder };
