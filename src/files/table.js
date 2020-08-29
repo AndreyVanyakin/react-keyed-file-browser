@@ -92,7 +92,7 @@ class RawTableFile extends BaseFile {
               ? browserProps.icons.Checked
               : browserProps.icons.Unchecked}
           </span>
-          <div style={{ paddingLeft: depth * 16 + "px" }}>{draggable}</div>
+          <span style={{ paddingLeft: depth * 16 + "px" }}>{draggable}</span>
         </td>
         {this.props.isShouldShowShared ? (
           <td className="size">{sharer}</td>
