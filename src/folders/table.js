@@ -87,11 +87,16 @@ class RawTableFolder extends BaseFolder {
         onDoubleClick={this.handleFolderDoubleClick}
       >
         <td className="name">
+          <span className="checkbox-icon">
+            {isSelected
+              ? browserProps.icons.Checked
+              : browserProps.icons.Unchecked}
+          </span>
           <div style={{ paddingLeft: depth * 16 + "px" }}>{draggable}</div>
         </td>
         {this.props.isShouldShowShared ? <td /> : null}
         <td />
-        {/* <td /> */}
+        <td />
         <td />
       </tr>
     );
@@ -110,7 +115,7 @@ class RawTableFolder extends BaseFolder {
   BaseFileConnectors.targetSource,
   BaseFileConnectors.targetCollect
 )
-class TableFolder extends RawTableFolder { }
+class TableFolder extends RawTableFolder {}
 
 export default TableFolder;
 export { RawTableFolder };

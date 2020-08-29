@@ -137,6 +137,7 @@ class RawListThumbnailFile extends BaseFile {
             </span>
             {name}
           </span>
+          <span className="status">{this.props.status}</span>
           {size}
           {modified}
         </div>

@@ -94,13 +94,18 @@ class RawTableFile extends BaseFile {
         onDoubleClick={this.handleItemDoubleClick}
       >
         <td className="name">
+          <span className="checkbox-icon">
+            {isSelected
+              ? browserProps.icons.Checked
+              : browserProps.icons.Unchecked}
+          </span>
           <div style={{ paddingLeft: depth * 16 + "px" }}>{draggable}</div>
         </td>
         {this.props.isShouldShowShared ? (
           <td className="size">{sharer}</td>
         ) : null}
         <td className="size">{fileSize(size)}</td>
-        {/* <td className="modified">{status}</td> */}
+        <td className="modified">{status}</td>
         <td className="modified">
           {typeof modified === "undefined"
             ? "-"

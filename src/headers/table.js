@@ -41,7 +41,7 @@ class RawTableHeader extends React.Component {
           <th className="size">Shared by</th>
         ) : null}
         <th className="size">Size</th>
-        {/* <th className="size">Status</th> */}
+        <th className="size">Status</th>
         <th className="modified">Last Modified</th>
       </tr>
     );
