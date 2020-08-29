@@ -129,15 +129,15 @@ class RawListThumbnailFile extends BaseFile {
       >
         <div className="item">
           <span className="thumb">{icon}</span>
-          <span className="name">
+          <span className="name">{name}</span>
+          <span className="status">
             <span className="encrypted-icon">
               {this.props.status === "encrypted"
                 ? browserProps.icons.Lock
                 : null}
             </span>
-            {name}
+            {this.props.status}
           </span>
-          <span className="status">{this.props.status}</span>
           {size}
           {modified}
         </div>
