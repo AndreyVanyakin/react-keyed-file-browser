@@ -21,7 +21,9 @@ class RawTableFile extends BaseFile {
       connectDragPreview,
       depth,
       isShouldShowShared,
+      isShouldShowSharedWithWhom,
       sharer,
+      shared_with,
       size,
       status,
       modified,
@@ -96,6 +98,9 @@ class RawTableFile extends BaseFile {
         </td>
         {this.props.isShouldShowShared ? (
           <td className="size">{sharer}</td>
+        ) : null}
+        {this.props.isShouldShowSharedWithWhom ? (
+          <td className="size">{shared_with}</td>
         ) : null}
         <td className="size">{fileSize(size)}</td>
         <td className="modified">

@@ -95,6 +95,7 @@ class RawTableFolder extends BaseFolder {
           <span style={{ paddingLeft: depth * 16 + "px" }}>{draggable}</span>
         </td>
         {this.props.isShouldShowShared ? <td /> : null}
+        {this.props.isShouldShowSharedWithWhom ? <td /> : null}
         <td />
         <td />
         <td />

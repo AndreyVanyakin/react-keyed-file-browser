@@ -16,6 +16,7 @@ class RawTableHeader extends React.Component {
     isOver: PropTypes.bool,
     isSelected: PropTypes.func,
     isShouldShowShared: PropTypes.bool,
+    isShouldShowSharedWithWhom: PropTypes.bool,
 
     browserProps: PropTypes.shape({
       createFiles: PropTypes.func,
@@ -39,6 +40,9 @@ class RawTableHeader extends React.Component {
         <th>File</th>
         {this.props.isShouldShowShared ? (
           <th className="size">Shared by</th>
+        ) : null}
+        {this.props.isShouldShowSharedWithWhom ? (
+          <th className="size">Shared with</th>
         ) : null}
         <th className="size">Size</th>
         <th className="size">Status</th>

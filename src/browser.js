@@ -221,6 +221,20 @@ class RawFileBrowser extends Component {
     return isShould;
   };
 
+  // Define if we should whos is the consumer of shared files with
+  isShouldShowSharedWithWhom = () => {
+    // console.log("Input files", this.props.files);
+    const filesWithSharedPresent = this.props.files.filter((fileObj) =>
+      includes(Object.keys(fileObj), "shared_with")
+    );
+    const isShould = filesWithSharedPresent.length > 0;
+    // console.log(
+    //   isShould ? "We should see shared" : "We should NOT see shared",
+    //   filesWithSharedPresent
+    // );
+    return isShould;
+  };
+
   // item manipulation
   createFiles = (files, prefix) => {
     this.setState(
@@ -716,6 +730,7 @@ class RawFileBrowser extends Component {
             {...thisItemProps}
             browserProps={browserProps}
             isShouldShowShared={this.isShouldShowShared()}
+            isShouldShowSharedWithWhom={this.isShouldShowSharedWithWhom()}
             {...fileRendererProps}
           />
         );
@@ -726,6 +741,7 @@ class RawFileBrowser extends Component {
               {...file}
               {...thisItemProps}
               isShouldShowShared={this.isShouldShowShared()}
+              isShouldShowSharedWithWhom={this.isShouldShowSharedWithWhom()}
               browserProps={browserProps}
               {...folderRendererProps}
             />
@@ -767,6 +783,7 @@ class RawFileBrowser extends Component {
       fileKey: "",
       fileCount: this.props.files.length,
       isShouldShowShared: this.isShouldShowShared(),
+      isShouldShowSharedWithWhom: this.isShouldShowSharedWithWhom(),
     };
     let renderedFiles;
 
