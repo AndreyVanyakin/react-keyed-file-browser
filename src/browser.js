@@ -53,6 +53,7 @@ class RawFileBrowser extends Component {
         key: PropTypes.string.isRequired,
         status: PropTypes.oneOf(["encrypted", "unencrypted"]),
         sharer: PropTypes.string,
+        shared_with: PropTypes.string,
         modified: PropTypes.number,
         created: PropTypes.number,
         size: PropTypes.number,
